@@ -404,6 +404,8 @@ header p{font-size:.75rem;color:var(--txm);margin-top:1px}
 .caja-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex-shrink:0}
 .caja-chip{display:inline-flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--brd2);color:var(--txm);padding:5px 11px;border-radius:999px;font-size:.74rem;cursor:pointer;font-family:'Inter',sans-serif;transition:all .2s;font-weight:600}
 .caja-chip:hover{color:#fff;border-color:var(--acc)}
+.ck-aviso-final{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:var(--radius-sm);padding:11px 13px;margin-top:14px;font-size:.76rem;color:var(--txm);line-height:1.55}
+.ck-aviso-final strong{color:var(--gold)}
 @media (max-width:480px){.caja-sec{scroll-margin-top:170px}}
 </style>
 </head>
@@ -448,7 +450,7 @@ header p{font-size:.75rem;color:var(--txm);margin-top:1px}
         <button class="checkout-back" id="cart-back-btn" onclick="cerrarCarrito()" style="flex:0 0 auto">Volver</button>
         <button class="cart-ig-btn" id="cart-checkout-btn" onclick="irACheckout()" style="flex:1;border:none">Continuar pedido</button>
       </div>
-      <div class="cart-note">Completa tus datos y te contactamos por Instagram para coordinar el pago.</div>
+      <div class="cart-note">El carrito por si solo no envia nada: continua, completa tus datos y presiona <strong>Enviar mi pedido</strong>. Te contactamos por Instagram para coordinar el pago.</div>
     </div>
   </div>
 </div>
@@ -2560,9 +2562,9 @@ function renderVistaFormulario(){
     +'</div>'
     +'<div class="field-error" id="err-ck-entrega">Elige una opcion de entrega.</div>'
     +'<div class="section-retiro" id="ck-sectionRetiro">'
-    +'<div class="retiro-info"><strong>Paldea Games</strong> - te enviamos la direccion exacta al coordinar.<br>'
+    +'<div class="retiro-info"><strong>Paldea Games</strong> - el retiro es en un <strong>punto de encuentro</strong> presencial (no es una tienda): la direccion exacta te la enviamos al coordinar.<br>'
     +'<strong>Lunes a viernes</strong> 10:00-18:00 | <strong>Sabado</strong> 10:00-14:00'
-    +'<br><a href="https://maps.app.goo.gl/iuDSCBxPxVADgiUKA" target="_blank" class="retiro-link">Ver referencia en el mapa &rarr;</a></div>'
+    +'<br><a href="https://maps.app.goo.gl/iuDSCBxPxVADgiUKA" target="_blank" class="retiro-link">&#128205; Punto de encuentro: haz clic aqui para ver en el mapa donde es y como llegar &rarr;</a></div>'
     +'<div class="row2" style="margin-top:12px">'
     +'<div class="field"><label>Dia preferido <span class="req">*</span></label>'
     +'<select id="ck-retiroDia" onchange="actualizarHorasRetiroPK()">'+opcionesDiasRetiroPK()+'</select>'
@@ -2627,9 +2629,10 @@ function renderVistaFormulario(){
     +'<div class="field-error" id="err-ck-ciudadSuc2">Ingresa tu ciudad.</div></div>'
     +'</div></div>'
     +'</div>'
+    +'<div class="ck-aviso-final"><strong>Ultimo paso:</strong> al presionar el boton de abajo, tu pedido se envia a Paldea Games y te contactamos por Instagram para coordinar el pago y la entrega. <strong>Si no lo presionas, el pedido no se registra</strong> y las cartas no quedan reservadas.</div>'
     +'<div class="checkout-row-btns">'
     +'<button class="checkout-back" onclick="volverAlCarrito()">Volver</button>'
-    +'<button class="checkout-submit" id="ck-submit" onclick="enviarPedidoPK()">Enviar pedido</button>'
+    +'<button class="checkout-submit" id="ck-submit" onclick="enviarPedidoPK()">Enviar mi pedido</button>'
     +'</div>';
   restaurarFormPK();
 }
@@ -2759,7 +2762,10 @@ async function enviarPedidoPK(){
     // muestra y el menu lo usa para descontar stock en la caja correcta.
     var rc=CARDS.find(function(x){return x[0]===c.cardId;});
     var pf=(rc&&CAJAS[rc[11]])?CAJAS[rc[11]].prefijo:'';
-    return {nombre:c.nombre,set:c.set,numero:c.num,rareza:c.rareza,idioma:c.idioma,cantidad:c.qty,precio_clp:c.precio,subtotal:c.precio*c.qty,prefijo:pf};
+    // cod_int: codigo interno PokemonTCG.io. Viaja en el pedido para el
+    // armador de pedidos (identifica la imagen exacta en el backend).
+    var ci=(rc?String(rc[5]||''):'');
+    return {nombre:c.nombre,set:c.set,numero:c.num,rareza:c.rareza,idioma:c.idioma,cantidad:c.qty,precio_clp:c.precio,subtotal:c.precio*c.qty,prefijo:pf,cod_int:ci};
   });
 
   var orderData={
@@ -2797,12 +2803,12 @@ async function enviarPedidoPK(){
   if(!enviado){
     ENVIANDO=false;
     alertaPK('Error de conexion. Intenta de nuevo.');
-    btn.disabled=false; btn.textContent='Enviar pedido';
+    btn.disabled=false; btn.textContent='Enviar mi pedido';
     return;
   }
   if(resp&&resp.success===false){
     ENVIANDO=false;
-    btn.disabled=false; btn.textContent='Enviar pedido';
+    btn.disabled=false; btn.textContent='Enviar mi pedido';
     alertaPK(resp.error||'No se pudo registrar el pedido. Intenta de nuevo.');
     return;
   }
@@ -2831,7 +2837,7 @@ function renderVistaExito(){
   document.getElementById('cart-body').innerHTML=
     '<div class="success-box"><div class="ok-icon">\u2713</div>'
     +'<h3>Pedido '+((p&&p.id)?p.id:'registrado')+'</h3>'
-    +'<p>Te contactaremos por Instagram para confirmar stock y coordinar el pago.</p>'
+    +'<p>&#161;Listo! Tu pedido ya llego a Paldea Games.<br>Te contactaremos por Instagram para confirmar stock y coordinar el pago.</p>'
     +(p&&p.total?'<p style="margin-top:6px;color:var(--gold);font-weight:700">Total: '+clp(p.total)+'</p>':'')
     +'<button class="checkout-back" style="margin-top:18px" onclick="cerrarCarrito()">Cerrar</button></div>';
 }
